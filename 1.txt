@@ -1,0 +1,4 @@
+insert "sdfsdsdfsdfsdfsfd" "2" "4" "" "ROCK" "Studio" "Address"
+insert "Cooldffdsdfsdfsdfsdfsdfsdf" "2" "4" "3" "ROCK" "Studio" "Address"
+show
+

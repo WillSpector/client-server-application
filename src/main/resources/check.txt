@@ -1,0 +1,2 @@
+insert "Nirvana" "2" "4" "" "ROCK" "Studio" "Address"
+insert "Cool" "2" "4" "3" "ROCK" "Studio" "Address"
