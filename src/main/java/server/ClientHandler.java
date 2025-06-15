@@ -161,4 +161,12 @@ public class ClientHandler {
             System.err.println("[Сервер] Ошибка при закрытии: " + e.getMessage());
         }
     }
+    public ClientState getState() {
+        return this.state;
+    }
+
+    public String getFileName() {
+        return this.fileName;
+    }
+
 }
