@@ -11,12 +11,24 @@ import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
+import java.util.logging.*;
 
 public class ClientInputHandler implements UserInputProvider {
     private final SocketChannel clientChannel;
     private final Selector selector;
     private static final int TIMEOUT = 5000;
     private static final int BUFFER_SIZE = 4096;
+
+    private static final Logger logger = Logger.getLogger(ClientInputHandler.class.getName());
+
+    static {
+        Logger rootLogger = Logger.getLogger("");
+        for (Handler h : rootLogger.getHandlers()) {
+            h.setFormatter(new SimpleFormatter());
+            h.setLevel(Level.FINE);
+        }
+        logger.setLevel(Level.FINE);
+    }
 
     public ClientInputHandler(SocketChannel clientChannel) throws IOException {
         this.clientChannel = clientChannel;
@@ -30,7 +42,7 @@ public class ClientInputHandler implements UserInputProvider {
             sendRequest(prompt);  // Отправка запроса на ввод
             return receiveResponse();  // Ожидание ответа
         } catch (IOException e) {
-            System.err.println(">>> Ошибка при запросе данных от клиента: " + e.getMessage());
+            logger.log(Level.WARNING, "Ошибка при запросе данных от клиента: " + e.getMessage(), e);
         }
         return ">>> Ошибка ввода.";
     }
@@ -40,7 +52,7 @@ public class ClientInputHandler implements UserInputProvider {
         try {
             sendResponse(message); // Отправка сообщения клиенту
         } catch (IOException e) {
-            System.err.println(">>> Ошибка при отправке сообщения клиенту: " + e.getMessage());
+            logger.log(Level.WARNING, "Ошибка при отправке сообщения клиенту: " + e.getMessage(), e);
         }
     }
 
@@ -62,24 +74,23 @@ public class ClientInputHandler implements UserInputProvider {
     }
 
     private String receiveResponse() throws IOException {
-        int readyChannels = selector.select(TIMEOUT);  // таймаут 5 сек
+        int readyChannels = selector.select(TIMEOUT);
         if (readyChannels == 0) {
-            System.out.println(">>> Ожидание ответа от клиента истекло.");
+            logger.warning("Ожидание ответа от клиента истекло.");
             return null;
         }
 
-        // Обрабатываем выбранные каналы
         Iterator<SelectionKey> iterator = selector.selectedKeys().iterator();
         while (iterator.hasNext()) {
             SelectionKey key = iterator.next();
-            iterator.remove(); // Удаляем обработанный ключ
+            iterator.remove();
 
             if (key.isReadable()) {
                 ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
                 int bytesRead = clientChannel.read(buffer);
 
                 if (bytesRead == -1) {
-                    System.out.println(">>> Канал закрыт клиентом.");
+                    logger.info("Канал закрыт клиентом.");
                     return null;
                 }
 
@@ -90,3 +101,4 @@ public class ClientInputHandler implements UserInputProvider {
         return null;
     }
 }
+

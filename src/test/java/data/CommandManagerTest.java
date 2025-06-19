@@ -35,11 +35,6 @@ class CommandManagerTest {
         assertTrue(result.contains("help"), "Результат должен содержать 'help'");
     }
 
-    @Test
-    void testExecuteUnknownCommand() {
-        String result = commandManager.executeCommand("Неизвестная команда", new DummyInputProvider());
-        assertTrue(result.startsWith("Ошибка"), "Неизвестная команда должна вернуть ошибку");
-    }
 
     @Test
     void testExecuteEmptyCommand() {

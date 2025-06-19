@@ -6,23 +6,29 @@ import java.io.InputStreamReader;
 
 public class UserInput {
 
-    private static final BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+    private static BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+
+    /**
+     * Сбросить reader — использовать текущий System.in (нужно для тестов)
+     */
+    public static void resetReader() {
+        reader = new BufferedReader(new InputStreamReader(System.in));
+    }
 
     /**
      * Чтение имени файла от пользователя.
      */
     public static String readFileNameFromUser() throws IOException {
         System.out.print("[Клиент] Введите имя файла коллекции: ");
-        String input = reader.readLine().trim();
-
-        if (input.isEmpty()) {
+        String input = reader.readLine();
+        if (input == null || input.trim().isEmpty()) {
             System.out.println("[Клиент] Имя файла не задано. Используется файл по умолчанию 'collection.json'.");
             return "collection.json";
         }
+        input = input.trim();
         if (!input.endsWith(".json")) {
             input += ".json";
         }
-
         return input;
     }
 

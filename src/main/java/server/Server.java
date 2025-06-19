@@ -11,6 +11,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.logging.*;
 
 public class Server {
     private final Selector selector;
@@ -19,12 +20,23 @@ public class Server {
     private final Path portFilePath = Paths.get("server-port.txt");
     private static final int BUFFER_SIZE = 4096;
 
+    private static final Logger logger = Logger.getLogger(Server.class.getName());
+
+    static {
+        Logger rootLogger = Logger.getLogger("");
+        for (Handler h : rootLogger.getHandlers()) {
+            h.setFormatter(new SimpleFormatter());
+            h.setLevel(Level.FINE);
+        }
+        logger.setLevel(Level.FINE);
+    }
+
     public static void main(String[] args) {
         int port = 12345;
         try {
             new Server(port).run();
         } catch (IOException e) {
-            System.err.println("Не удалось запустить сервер на порту " + port + ": " + e.getMessage());
+            logger.log(Level.SEVERE, "Не удалось запустить сервер на порту " + port, e);
         }
     }
 
@@ -36,32 +48,33 @@ public class Server {
         try {
             serverChannel.bind(new InetSocketAddress(port));
         } catch (IOException e) {
-            System.out.println(">>> Порт " + port + " занят. Ищу свободный порт...");
+            logger.warning("Порт " + port + " занят. Ищу свободный порт...");
             try (ServerSocket tempSocket = new ServerSocket(0)) {
                 port = tempSocket.getLocalPort();
             }
             serverChannel.bind(new InetSocketAddress(port));
         }
+
         // Сохраняем порт в файл
         try (FileWriter writer = new FileWriter(portFilePath.toFile())) {
             writer.write(String.valueOf(port));
         } catch (IOException e) {
-            System.err.println(">>> Не удалось сохранить порт в файл: " + e.getMessage());
+            logger.warning("Не удалось сохранить порт в файл: " + e.getMessage());
         }
 
         // Удаление файла при завершении работы
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             try {
                 Files.deleteIfExists(portFilePath);
-                System.out.println(">>> Файл server-port.txt удалён.");
+                logger.info("Файл server-port.txt удалён.");
             } catch (IOException e) {
-                System.err.println(">>> Не удалось удалить server-port.txt: " + e.getMessage());
+                logger.warning("Не удалось удалить server-port.txt: " + e.getMessage());
             }
         }));
 
         serverChannel.configureBlocking(false);
         serverChannel.register(selector, SelectionKey.OP_ACCEPT);
-        System.out.println(">>> Сервер запущен на порту " + port);
+        logger.info("Сервер запущен на порту " + port);
     }
 
     public void run() throws IOException {
@@ -91,11 +104,9 @@ public class Server {
     private void acceptConnection() throws IOException {
         SocketChannel client = serverChannel.accept();
         client.configureBlocking(false);
-        // регистрируем и сразу получаем ключ
         client.register(selector, SelectionKey.OP_READ);
-        System.out.println(">>> Новое подключение: " + client.getRemoteAddress());
+        logger.info("Новое подключение: " + client.getRemoteAddress());
 
-        // читаем имя файла первым сообщением
         ByteBuffer buf = ByteBuffer.allocate(BUFFER_SIZE);
         int bytesRead = client.read(buf);
         String fileName = "collection.json";

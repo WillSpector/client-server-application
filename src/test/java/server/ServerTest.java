@@ -14,14 +14,14 @@ public class ServerTest {
     @Test
     public void testServerPortFileIsCreated() throws IOException {
         // Удаляем файл, если он существует
-        Path portFilePath = Paths.get("server.txt");
+        Path portFilePath = Paths.get("server-port.txt");
         Files.deleteIfExists(portFilePath);
 
         // Создаём сервер
         Server server = new Server(0);
 
         // Проверяем, что файл с портом создан
-        assertTrue(Files.exists(portFilePath), "Файл server.txt должен существовать");
+        assertTrue(Files.exists(portFilePath), "Файл server-port.txt должен существовать");
 
         // Проверяем, что в файле корректный порт
         String content = Files.readString(portFilePath);
